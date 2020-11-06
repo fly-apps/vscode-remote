@@ -1,0 +1,55 @@
+#!/bin/bash
+
+set -e
+
+echo "Generating SSH host keys"
+mkdir -p etc/ssh
+ssh-keygen -A -f .
+
+echo "Generating personal SSH key"
+mkdir -p home/.ssh
+
+if [ -f "home/.ssh/id_ed25519" ]; then
+    echo "home/.ssh/id_ed25519 exists, skipping."
+    echo ""
+    echo "Make sure you added this public key to your Github / Gitlab / other vcs:"
+else 
+    echo "home/.ssh/id_ed25519 does not exist, generating."
+    ssh-keygen -t ed25519 -f home/.ssh/id_ed25519 -C "$(whoami)@vscode-server-ssh" -N ""
+    echo ""
+    echo "Add this public key to your Github / Gitlab / other vcs:"
+fi
+
+cat home/.ssh/id_ed25519.pub
+
+AUTHORIZED_KEYS=""
+
+for i in ~/.ssh/*.pub; do
+    AUTHORIZED_KEYS="$AUTHORIZED_KEYS$(cat $i)\n"
+done
+
+echo -en $AUTHORIZED_KEYS > home/.ssh/authorized_keys
+
+echo ""
+echo "Set this in your fly.toml:"
+echo ""
+echo "\
+app = \"your app name\"
+
+[[services]]
+internal_port = 22
+protocol = \"tcp\"
+
+[[services.ports]]
+port = 10022
+
+[[mounts]]
+source = \"data\"
+destination = \"/data\"
+
+[env]
+HOME_SSH_ID_ED25519_PUB = \"$(cat home/.ssh/id_ed25519.pub)\"
+ETC_SSH_SSH_HOST_ECDSA_KEY_PUB = \"$(cat etc/ssh/ssh_host_ecdsa_key.pub)\"
+ETC_SSH_SSH_HOST_ED25519_KEY_PUB = \"$(cat etc/ssh/ssh_host_ed25519_key.pub)\"
+ETC_SSH_SSH_HOST_RSA_KEY_PUB = \"$(cat etc/ssh/ssh_host_rsa_key.pub)\"
+"
