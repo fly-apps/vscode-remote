@@ -5,34 +5,39 @@ set -e
 echo "Creating /run/sshd"
 mkdir -p /run/sshd
 
-echo "Decoding and writing SSH host keys"
+HOME_DIR=/data/home
+SSH_DIR=/data/etc/ssh
 
-echo "$HOME_SSH_ID_ED25519_BASE64" | base64 -d > /home/$USER_ARG/.ssh/id_ed25519
-echo "$HOME_SSH_ID_ED25519_PUB" > /home/$USER_ARG/.ssh/id_ed25519.pub
-chmod 0600 /home/$USER_ARG/.ssh/id_ed25519
-chown -R $USER_ARG /home/$USER_ARG/.ssh
+echo "Ensure home directory"
+mkdir -p $HOME_DIR
 
-echo "$ETC_SSH_SSH_HOST_ECDSA_KEY_BASE64" | base64 -d > /etc/ssh/ssh_host_ecdsa_key
-echo "$ETC_SSH_SSH_HOST_ECDSA_KEY_PUB" > /etc/ssh/ssh_host_ecdsa_key.pub
-chmod 0600 /etc/ssh/ssh_host_ecdsa_key
+echo "Ensure SSH host keys"
+mkdir -p $SSH_DIR
+ssh-keygen -A -f /data
 
-echo "$ETC_SSH_SSH_HOST_RSA_KEY_BASE64" | base64 -d > /etc/ssh/ssh_host_rsa_key
-echo "$ETC_SSH_SSH_HOST_RSA_KEY_PUB" > /etc/ssh/ssh_host_rsa_key.pub
-chmod 0600 /etc/ssh/ssh_host_rsa_key
+echo "Setup SSH access for user $USER_ARG"
+mkdir -p $HOME_DIR/.ssh
+echo "$HOME_SSH_AUTHORIZED_KEYS" > $HOME_DIR/.ssh/authorized_keys
 
-echo "$ETC_SSH_SSH_HOST_ED25519_KEY_BASE64" | base64 -d > /etc/ssh/ssh_host_ed25519_key
-echo "$ETC_SSH_SSH_HOST_ED25519_KEY_PUB" > /etc/ssh/ssh_host_ed25519_key.pub
-chmod 0600 /etc/ssh/ssh_host_ed25519_key
+if [ -f "$HOME_DIR/.ssh/id_ed25519" ]; then
+    echo "$HOME_DIR/.ssh/id_ed25519 exists, skipping."
+    echo ""
+    echo "Make sure you add this public key to your Github / Gitlab / other vcs:"
+else 
+    echo "$HOME_DIR/.ssh/id_ed25519 does not exist, generating."
+    ssh-keygen -t ed25519 -f $HOME_DIR/.ssh/id_ed25519 -C "$USER_ARG@fly-vscode" -N ""
+    echo ""
+    echo "Add this public key to your Github / Gitlab / other vcs:"
+fi
 
-echo "Symlinking ~/.config and ~/.vscode-server to the data mount"
-mkdir -p /data/.config
-ln -s /data/.config /home/$USER_ARG/.config
+echo "chowning your home to you"
+chown -R $USER_ARG:$USER_ARG $HOME_DIR
 
-mkdir -p /data/.vscode-server
-ln -s /data/.vscode-server /home/$USER_ARG/.vscode-server
-
-echo "Chowning $USER_ARG on /data recursively"
-chown -R $USER_ARG /data
+if [[ -d "docker-entrypoint.d" ]]
+then
+echo "Running docker-entrypoint.d files"
+/bin/run-parts --verbose docker-entrypoint.d
+fi
 
 echo "Running $@"
 

@@ -14,7 +14,6 @@ source = "data"
 destination = "/data"
 
 [env]
-HOME_SSH_ID_ED25519_PUB = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIIfDmPocPBU/0TeKhi3HcWT9pjyCqBQF8E+vzu/fprs jerome@vscode-server-ssh"
-ETC_SSH_SSH_HOST_ECDSA_KEY_PUB = "ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBGO0ZqdiCLyDQZNxPkBvS6dfK9/udCNoyLBsDuqH5w9+iXpQgbeLekY470lHqfxtzAtKJ2/NnKhDVYoBGQS9uAY= jerome@bee075e1"
-ETC_SSH_SSH_HOST_ED25519_KEY_PUB = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICzeAhGkkhKt+t0Uuveyzkr19mtmkdnAHQ7AGX61dw8n jerome@bee075e1"
-ETC_SSH_SSH_HOST_RSA_KEY_PUB = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC5Di+YcUxpf29FzAF1xRv+RPa84O4zbA9hG+xqIR9FAx/8H6PY/05MLogVdngWOZWoyhYavcVIoceqCbH5T0WW+jQAgCg4IV2u4cZlMFSqwyQKr9MQIjsqh24fcmxJZy3Y+tKpCo1yV82KU+TnQq0JIYD09BGEDYXM93t/CxIc7vVrqKZnlppA2Zeomjx3ELRlNP724LqUE8aEm6vq+vsGc5byZPvZD4w+YDxNROxXHW8UjwT997m9bz+sWloiASo6BU3IFhx8ru5W+0MWvqOoTNVRYN3ZCEiTYX4G4D6gMUlpd0KNmXsvhx+hq/HnSrfl2LxAXkf/ex6g7vRh5dAn jerome@bee075e1"
+HOME_SSH_AUTHORIZED_KEYS = '''
+<please run `./generate_fly_toml` or add your ssh public keys here>
+'''

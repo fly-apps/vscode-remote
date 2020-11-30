@@ -1,0 +1,6 @@
+#!/bin/bash
+
+set -e
+
+# vscode complains about this if not set.
+sysctl -w fs.inotify.max_user_watches=524288
