@@ -30,6 +30,8 @@ else
     echo "Add this public key to your Github / Gitlab / other vcs:"
 fi
 
+cat $HOME_DIR/.ssh/id_ed25519.pub
+
 echo "chowning your home to you"
 chown -R $USER_ARG:$USER_ARG $HOME_DIR
 
