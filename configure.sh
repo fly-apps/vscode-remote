@@ -68,7 +68,7 @@ print }'`
 
 fly volumes create data --region $REGION $disksize
 
-fly deploy --build-arg USER=$(whoami) $usedocker --build-arg EXTRA_PKGS="$extrapackages"
+fly deploy --build-arg USER=$(whoami) --build-arg EXTRA_PKGS="$extrapackages" $usedocker 
 
 echo
 echo

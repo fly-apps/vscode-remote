@@ -1,4 +1,4 @@
-# VSCode-Remote-SSH
+# VSCode-Remote
 
 Deploy a remote development system for VS Code's Remote SSH on Fly.
 
@@ -8,17 +8,17 @@ Deploy a remote development system for VS Code's Remote SSH on Fly.
 
 When you get the need to develop but there's no machine to hand that's quite powerful enough, your next step may be to roll yourself a cloud instance and develop on there. With tools like VS Code's Remote SSH mode, remotely working with a development machine in the cloud can be a joy. 
 
-But then you have to go through the entire provisioning process every time you want a fresh machine to work with. Which is why using Fly can make it simpler. This Appkata example is all about making that process completely automated. At the end of deploying it, you'll have a Fly instance with attached disk storage, running Ubuntu, accessible by you and using certificate-based authentication, with Docker and whatever packages you select.
+But then you have to go through the entire provisioning process every time you want a fresh machine to work with. Which is why using Fly can make it simpler. This example is all about making that process completely automated. At the end of deploying it, you'll have a Fly instance with attached disk storage, running Ubuntu, accessible by you and using certificate-based authentication, with Docker and whatever packages you select.
 
 ## Using
 
 Get the code by git cloning the repository:
 
 ```
-git clone https://github.com/fly-examples/appkata-vscode-remote.git
+git clone https://github.com/fly-examples/vscode-remote.git
 ```
 
-Then cd into the `appkata-vscode-remote` directory and run the configure script.
+Then cd into the `vscode-remote` directory and run the configure script.
 
 ```cmd
 ./configure.sh
@@ -89,10 +89,10 @@ Deploying crimson-bush-6560
 Services
 TCP 10022 ⇢ 22
 
-Deploy source directory '/Users/dj/temp/appkata-vscode-remote'
+Deploy source directory '/Users/dj/temp/vscode-remote'
 Docker daemon available, performing local build...
 ==> Building with Dockerfile
-Using Dockerfile Builder: /Users/dj/temp/appkata-vscode-remote/Dockerfile
+Using Dockerfile Builder: /Users/dj/temp/vscode-remote/Dockerfile
 Step 1/17 : FROM ubuntu:bionic
  ---> 2c047404e52d
  ...
@@ -148,19 +148,69 @@ The heart of many Fly apps is the Dockerfile, which creates the image that will 
 
 * installs a number of essential packages (SSH server) and anything selected by the user as an extra package.
 * creates a user with a selected name.
-* gives that user sudo privileges.
+* gives that user `sudo` privileges.
 * installs Docker components if they were requested
 * copies over SSH server configuration and keys
 * sets up the image to run
 
+The important part here is that variables, `USER`, `USE_DOCKER` and `EXTRA_PKGS` are used to configure some of that build behavior.
 
+### The Script
 
-
-
+The `configure.sh` script is responsible for getting the values of those variables. It asks the user running it for settings for the various values. It also asks for an appname (as `$appname`) and a disk size for the attached volume. Finally, it gathers the user's SSH public keys into a single string called AUTHORIZED_KEYS. With all the values acquired, the script can create the app.
 
 ### Creating with a Template
 
+To create the app, the script writes out a file called `import.toml`. It's a template for what we would like in our application when we create it. It sets up SSH's port 22 to appear as port 10022, adds a mount for a disk volume, and passes SSH AUTHORIZED_KEYS as an environment variable.
+
+Then it runs:
+
+```
+fly init $appname --import import.toml --org personal --overwrite
+```
+
+This creates an app with the user's requested app name and then imports the `import.toml` file to configure it. It places the app in the user's `personal` organization. Finally, an `--overwrite` flag means this command will overwrite existing `fly.toml` files without querying the user.
+
 ### Finding the Region/Creating a Volume
 
+Now, this script needs to create a volume in the same region as the app to provide storage for it. While humans can easily read the the output saying which region the app has been created in, it's currently a little harder for scripts. That's where this snippet comes in:
+
+```
+REGION=`fly regions list --json | awk '/"Code"/ { sub(/\ *"Code\": \"/ , "")
+sub(/",/,"")
+print }'`
+```
+
+It runs the `fly regions list` command but with the `--json` flag which makes the output somewhat more processable. It then uses `awk` (a fine Unix command) to extract out the region code from the line which reads `"Code": "lhr",`. It's that value it saves into the REGION variable ready for when it runs:
+
+```
+fly volumes create data --region $REGION $disksize
+```
+
+Which creates the storage volume.
+
 ### Deploying with Docker Arguments
+
+At this point in the script we are ready to deploy with `fly deploy` but we still have our `USER`, `USE_DOCKER` and `EXTRA_PKGS` arguments to pass. The command line looks like this:
+
+```
+fly deploy --build-arg USER=$(whoami) --build-arg EXTRA_PKGS="$extrapackages" $usedocker 
+```
+
+The `--build-arg` flag takes a name=value pairing as its parameter. The first build-arg sets `USER` to the value of the current user's name. The second build-arg sets `EXTRA_PKGS` to the value of the $extrapackages variable; notice that it is surrounded in quotes are the list of extra packages will likely contain spaces which the shell would process. 
+
+Finally, we have `$usedocker` on its own, but that's because, if you scan to the top of the script, you'll see that it the user answers "Yes" to the question, the value of $usedocker is set to "--build-arg USE_DOCKER=y" (if they answer no, then $usedocker is just an empty string). 
+
+As you can see, there's a lot of ways to build up your build arguments. Consult your shell and Dockerfile references for more.
+
+Once run, the command will build, using the Dockerfile and build-args, an image which will then be deployed onto the Fly infrastructure.
+
+The only thing left is the tell the user how to connect and what address to use.  
+
+```
+echo "To use in VS Code, tell the remote-ssh package to connect to $(whoami)@$(fly info --host):10022"
+```
+
+The `fly info --host` is an easy way to get the host name of your deployment for connection strings.
+
 
