@@ -213,4 +213,9 @@ echo "To use in VS Code, tell the remote-ssh package to connect to $(whoami)@$(f
 
 The `fly info --host` is an easy way to get the host name of your deployment for connection strings.
 
+## Discuss
+
+* You can discuss this example on the [vscode-remote example](https://community.fly.io/t/a-vscode-example-for-fly/460) topic on community.fly.io.
+
+
 
