@@ -4,18 +4,22 @@ set -e
 
 read -p "Enter desired app name or press return to have a name generated:" appname
 
-if [ appname=="" ]
-then
+if [ -z "$appname" ]; then
     appname="--generatename"
+fi
+
+read -p "Enter desired organization name or press return to use your personal org:" orgname
+
+if [ -z "$orgname" ]; then
+    orgname="personal"
 fi
 
 read -p "Enter disk size in GB or press return for default 10GB:" disksizenum
 
-if [ disksizenum=="" ]
-then
+if [ -z "$disksizenum" ]; then
     disksize=""
 else
-    disksize="--size $(disksizenum)"
+    disksize="--size ${disksizenum}"
 fi
 
 read -p "Use Docker on remote machine (y/n):" usedockerresponse
@@ -58,7 +62,7 @@ $AUTHORIZED_KEYS
 '''
 ">import.toml
 
-fly init $appname --import import.toml --org personal --overwrite
+fly init $appname --import import.toml --org $orgname --overwrite
 
 rm import.toml
 
