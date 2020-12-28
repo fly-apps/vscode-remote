@@ -24,7 +24,7 @@ fi
 
 read -p "Use Docker on remote machine (y/n):" usedockerresponse
 
-case usedockerresponse in 
+case $usedockerresponse in 
 [Yy])
     usedocker="--build-arg USE_DOCKER=y"
 ;;
