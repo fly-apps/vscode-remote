@@ -25,6 +25,7 @@ Then cd into the `vscode-remote` directory and run the configure script.
 ```
 ```out
 Enter desired app name or press return to have a name generated:
+Enter desired organization name or press return to use your personal org:
 Enter disk size in GB or press return for default 10GB:
 Use Docker on remote machine (y/n):y
 Any extra packages:clang htop make
@@ -33,6 +34,7 @@ Any extra packages:clang htop make
 We'll pause here to review the only interactive part of the process.
 
 * First, there's a request for an app-name which is used for the instance's hostname. If you don't need a particular name, just hit return and Fly will generate an appname.
+* That's followed by a request for an organization. Just hit return to put it into your personal organization.
 * Then there's a request for the number of gigabytes of disk space you want attached to the instance. This will be your working space. Hit return to get the minimum (and default) of 10GB.
 * If you want Docker's daemon and tools pre-installed, answer Y at the next question.
 * You can add other Ubuntu packages to be pre-installed at this point. Hit return for none, or enter their names in a space-separated list.
@@ -157,7 +159,7 @@ The important part here is that variables, `USER`, `USE_DOCKER` and `EXTRA_PKGS`
 
 ### The Script
 
-The `configure.sh` script is responsible for getting the values of those variables. It asks the user running it for settings for the various values. It also asks for an appname (as `$appname`) and a disk size for the attached volume. Finally, it gathers the user's SSH public keys into a single string called AUTHORIZED_KEYS. With all the values acquired, the script can create the app.
+The `configure.sh` script is responsible for getting the values of those variables. It asks the user running it for settings for the various values. It also asks for an appname (as `$appname`), an organization (as `$orgname`), and a disk size for the attached volume. Finally, it gathers the user's SSH public keys into a single string called AUTHORIZED_KEYS. With all the values acquired, the script can create the app.
 
 ### Creating with a Template
 
@@ -166,10 +168,10 @@ To create the app, the script writes out a file called `import.toml`. It's a tem
 Then it runs:
 
 ```
-fly init $appname --import import.toml --org personal --overwrite
+fly init $appname --import import.toml --org $orgname --overwrite
 ```
 
-This creates an app with the user's requested app name and then imports the `import.toml` file to configure it. It places the app in the user's `personal` organization. Finally, an `--overwrite` flag means this command will overwrite existing `fly.toml` files without querying the user.
+This creates an app with the user's requested app name and organization and then imports the `import.toml` file to configure it. It places the app in the user's `personal` organization. Finally, an `--overwrite` flag means this command will overwrite existing `fly.toml` files without querying the user.
 
 ### Finding the Region/Creating a Volume
 
